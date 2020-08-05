@@ -7,7 +7,8 @@
 
 # Requirements
 - python 3.7
-- Pytorch 1.4.0
+- Pytorch 1.6.0
 - numpy 1.18.1
+- sentencepiece 0.1.85
 
 # Reference
