@@ -1,0 +1,6 @@
+future==0.18.2
+numpy==1.18.1
+Pillow==7.2.0
+sentencepiece==0.1.85
+torch==1.6.0
+torchvision==0.7.0
