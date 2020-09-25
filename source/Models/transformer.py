@@ -160,9 +160,9 @@ class DecoderLayer(nn.Module, ABC):
         return ffn_outputs, self_self_attn, dec_enc_attn
 
 
-class Encoder(nn.Module, ABC):
+class TransformerEncoder(nn.Module, ABC):
     def __init__(self, input_dim, hid_dim, n_layers, n_heads, head_dim, pf_dim, dropout=0, max_length=50, padding_id=3):
-        super(Encoder, self).__init__()
+        super(TransformerEncoder, self).__init__()
         self.src_emb = nn.Embedding(input_dim, hid_dim)
         sinusoid_table = torch.FloatTensor(get_sinusoid_encoding_table(max_length + 1, hid_dim))
         self.pos_emb = nn.Embedding.from_pretrained(sinusoid_table, freeze=True)
@@ -192,9 +192,9 @@ class Encoder(nn.Module, ABC):
         return enc_outputs, enc_self_attns
 
 
-class Decoder(nn.Module, ABC):
+class TransformerDecoder(nn.Module, ABC):
     def __init__(self, input_dim, hid_dim, n_layers, n_heads, head_dim, pf_dim, dropout, max_length=50, padding_id=3):
-        super(Decoder, self).__init__()
+        super(TransformerDecoder, self).__init__()
         self.tar_emb = nn.Embedding(input_dim, hid_dim)
         sinusoid_table = torch.FloatTensor(get_sinusoid_encoding_table(max_length + 1, hid_dim))
         self.pos_emb = nn.Embedding.from_pretrained(sinusoid_table, freeze=True)

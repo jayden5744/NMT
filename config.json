@@ -1,0 +1,100 @@
+{
+  "file_path": {
+    "data_path": "Data/",
+    "dictionary_path": "Dicionary/",
+    "src_train_filename": "ko.train",
+    "tar_train_filename": "en.train",
+    "src_val_filename": "ko.val",
+    "tar_val_filename": "en.val",
+    "model_path": "Model/",
+    "img_path": "img/"
+  },
+
+  "basic_parameter": {
+    "model": "transformer",
+    "region": "en",
+    "vocab_size": 8000,
+    "max_sequence_size": 50,
+    "label_smoothing": 0.1,
+    "learning_rate": 0.0005,
+    "epochs": 200,
+    "batch_size": 512,
+    "early_stopping": 30,
+    "train_step_print": 10,
+    "val_step_print": 100,
+    "step_save": 1000
+  },
+
+  "seq2seq": {
+    "embedding_dim": 512,
+    "learning_method": "Scheduled_Sampling",
+    "encoder": {
+      "encoder_rnn_dim": 256,
+      "encoder_n_layers": 3,
+      "encoder_embedding_dropout": 0.3,
+      "encoder_rnn_dropout": 0.3,
+      "encoder_dropout": 0.3,
+      "encoder_bidirectional_used": true,
+      "encoder_residual_used": true,
+      "encoder_hidden_transformer_bias": true,
+      "encoder_output_transformer_bias": true
+    },
+    "decoder": {
+      "decoder_rnn_dim": 256,
+      "decoder_n_layers": 3,
+      "decoder_embedding_dropout": 0.3,
+      "decoder_rnn_dropout": 0.3,
+      "decoder_dropout": 0.3,
+      "decoder_residual_used": true
+    }
+
+  },
+
+  "attention": {
+    "embedding_dim": 512,
+    "attention_score": "dot",
+    "learning_method": "Scheduled_Sampling",
+    "plot_count": 6,
+    "encoder": {
+      "encoder_rnn_dim": 256,
+      "encoder_n_layers": 3,
+      "encoder_embedding_dropout": 0.3,
+      "encoder_rnn_dropout": 0.3,
+      "encoder_dropout": 0.3,
+      "encoder_bidirectional_used": true,
+      "encoder_residual_used": true,
+      "encoder_hidden_transformer_bias": true,
+      "encoder_output_transformer_bias": true
+    },
+    "decoder": {
+      "decoder_rnn_dim": 256,
+      "decoder_n_layers": 3,
+      "decoder_embedding_dropout": 0.3,
+      "decoder_rnn_dropout": 0.3,
+      "decoder_dropout": 0.3,
+      "decoder_residual_used": true
+    }
+  },
+
+  "transformer": {
+    "embedding_dim": 512,
+    "plot_count": 6,
+    "encoder": {
+      "encoder_hidden_dim":512,
+      "encoder_layers": 6,
+      "encoder_heads": 4,
+      "encoder_head_dim": 64,
+      "encoder_pf_dim": 512,
+      "encoder_dropout": 0.3
+    },
+    "decoder": {
+      "decoder_hidden_dim":512,
+      "decoder_layers": 6,
+      "decoder_heads": 4,
+      "decoder_head_dim": 64,
+      "decoder_pf_dim": 512,
+      "decoder_dropout": 0.3
+
+    }
+  }
+}
