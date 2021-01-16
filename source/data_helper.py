@@ -3,35 +3,40 @@ import torch
 import shutil
 import sentencepiece as spm
 from torch.utils.data import Dataset
+from sklearn.model_selection import train_test_split
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-def create_or_get_voca(save_path, ko_corpus_path=None, en_corpus_path=None, ko_vocab_size=4000, en_vocab_size=4000):
-    ko_corpus_prefix = 'ko_corpus_{}'.format(ko_vocab_size)  # vocab_size를 바꾸면 embedding_size도 변경
-    en_corpus_prefix = 'en_corpus_{}'.format(en_vocab_size)
+def create_or_get_voca(save_path, src_corpus_path=None, trc_corpus_path=None, src_vocab_size=4000, trc_vocab_size=4000,
+                       src_region="ko", trc_region="en"):
+    src_corpus_prefix = '{0}_corpus_{1}'.format(src_region, src_vocab_size)  # vocab_size를 바꾸면 embedding_size도 변경
+    trc_corpus_prefix = '{0}_corpus_{1}'.format(trc_region, trc_vocab_size)
 
-    if ko_corpus_path and en_corpus_path:
+    if src_corpus_path and trc_corpus_path:
         templates = '--input={} --model_prefix={} --vocab_size={} ' \
                     '--bos_id=0 --eos_id=1 --unk_id=2 --pad_id=3'
         # input : 학습시킬 텍스트의 위치
         # model_prefix : 만들어질 모델 이름
         # vocab_size : 사전의 크기
-        ko_model_train_cmd = templates.format(ko_corpus_path, ko_corpus_prefix, ko_vocab_size)
-        en_model_train_cmd = templates.format(en_corpus_path, en_corpus_prefix, en_vocab_size)
+        src_model_train_cmd = templates.format(src_corpus_path, src_corpus_prefix, src_vocab_size)
+        trc_model_train_cmd = templates.format(trc_corpus_path, trc_corpus_prefix, trc_vocab_size)
 
-        spm.SentencePieceTrainer.Train(ko_model_train_cmd)  # Korean 텍스트를 가지고 학습
-        spm.SentencePieceTrainer.Train(en_model_train_cmd)  # English 텍스트를 가지고 학습
-
+        spm.SentencePieceTrainer.Train(src_model_train_cmd)  # Korean 텍스트를 가지고 학습
+        spm.SentencePieceTrainer.Train(trc_model_train_cmd)  # English 텍스트를 가지고 학습
+        print(os.getcwd())
+        print(save_path)
         # 파일을 저장위치로 이동
-        shutil.move(ko_corpus_prefix + '.model', save_path)
-        shutil.move(ko_corpus_prefix + '.vocab', save_path)
-        shutil.move(en_corpus_prefix + '.model', save_path)
-        shutil.move(en_corpus_prefix + '.vocab', save_path)
+        shutil.move(src_corpus_prefix + '.model', save_path)
+        shutil.move(src_corpus_prefix + '.vocab', save_path)
+        shutil.move(trc_corpus_prefix + '.model', save_path)
+        shutil.move(trc_corpus_prefix + '.vocab', save_path)
 
-    ko_sp = spm.SentencePieceProcessor()
-    en_sp = spm.SentencePieceProcessor()
-    ko_sp.load(os.path.join(save_path, ko_corpus_prefix + '.model'))  # model load
-    en_sp.load(os.path.join(save_path, en_corpus_prefix + '.model'))  # model load
-    return ko_sp, en_sp
+    src_sp = spm.SentencePieceProcessor()
+    trc_sp = spm.SentencePieceProcessor()
+    src_sp.load(os.path.join(save_path, src_corpus_prefix + '.model'))  # model load
+    trc_sp.load(os.path.join(save_path, trc_corpus_prefix + '.model'))  # model load
+    return src_sp, trc_sp
 
 
 class TrainDataset(Dataset):
@@ -59,21 +64,20 @@ class TrainDataset(Dataset):
 
     def encoder_input_to_vector(self, sentence: str):
         idx_list = self.ko_voc.EncodeAsIds(sentence)  # str -> idx
-        idx_list.append(self.EN_EOS_ID)  # End Token 삽입
         idx_list = self.padding(idx_list, self.KO_PAD_ID)  # padding 삽입
-        return torch.tensor(idx_list)
+        return torch.tensor(idx_list).to(device)
 
     def decoder_input_to_vector(self, sentence: str):
         idx_list = self.en_voc.EncodeAsIds(sentence)  # str -> idx
         idx_list.insert(0, self.EN_BOS_ID)  # Start Token 삽입
         idx_list = self.padding(idx_list, self.EN_PAD_ID)  # padding 삽입
-        return torch.tensor(idx_list)
+        return torch.tensor(idx_list).to(device)
 
     def decoder_output_to_vector(self, sentence: str):
         idx_list = self.en_voc.EncodeAsIds(sentence)  # str -> idx
         idx_list.append(self.EN_EOS_ID)  # End Token 삽입
         idx_list = self.padding(idx_list, self.EN_PAD_ID)  # padding 삽입
-        return torch.tensor(idx_list)
+        return torch.tensor(idx_list).to(device)
 
     def padding(self, idx_list, padding_id):
         length = len(idx_list)  # 리스트의 길이
@@ -107,7 +111,7 @@ class TestDataset(Dataset):
         idx_list = self.ko_voc.EncodeAsIds(sentence)  # str -> idx
         idx_list.append(self.EN_EOS_ID)  # End Token 삽입
         idx_list = self.padding(idx_list, self.KO_PAD_ID)  # padding 삽입
-        return torch.tensor(idx_list)
+        return torch.tensor(idx_list).to(device)
 
     def padding(self, idx_list, padding_id):
         length = len(idx_list)  # 리스트의 길이
@@ -117,3 +121,37 @@ class TestDataset(Dataset):
         else:
             idx_list = idx_list[:self.sequence_size]
         return idx_list
+
+
+def split_data(src_path, trc_path, val_size=10000, test_size=10000):
+    with open(src_path, 'r', encoding='utf-8-sig') as f:
+        src_lst = []
+        for i in f.readlines():
+            src_lst.append(i)
+
+    with open(trc_path, "r", encoding='utf-8-sig') as f:
+        trc_lst = []
+        for i in f.readlines():
+            trc_lst.append(i)
+
+    x_train, x_test, y_train, y_test = train_test_split(src_lst, trc_lst, test_size=test_size, random_state=1111)
+    x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=val_size, random_state=1111)
+
+    return x_train, x_val, x_test, y_train, y_val, y_test
+
+def save_txt(file_name, lst):
+    with open(file_name, 'w', encoding='utf-8-sig') as f:
+        for i in lst:
+            f.write(i)
+
+
+if __name__ =='__main__':
+    src_path = "../Data/ko_total.txt"
+    trc_path = "../Data/en_total.txt"
+    x_train, x_val, x_test, y_train, y_val, y_test = split_data(src_path, trc_path, val_size=10000, test_size=50000)
+    save_txt("../Data/ko.train", x_train)
+    save_txt("../Data/ko.val", x_val)
+    save_txt("../Data/ko.test", x_test)
+    save_txt("../Data/en.train", y_train)
+    save_txt("../Data/en.val", y_val)
+    save_txt("../Data/en.test", y_test)

@@ -1,6 +1,12 @@
-future==0.18.2
-numpy==1.18.1
-Pillow==7.2.0
+certifi==2020.12.5
+numpy==1.19.5
+Pillow==8.1.0
+protobuf==3.14.0
 sentencepiece==0.1.85
-torch==1.6.0
-torchvision==0.7.0
+six==1.15.0
+tensorboardX==2.1
+torch==1.7.1+cu110
+torchaudio==0.7.2
+torchvision==0.8.2+cu110
+typing-extensions==3.7.4.3
+wincertstore==0.2

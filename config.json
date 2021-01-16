@@ -1,7 +1,7 @@
 {
   "file_path": {
     "data_path": "Data/",
-    "dictionary_path": "Dicionary/",
+    "dictionary_path": "Dictionary/",
     "src_train_filename": "ko.train",
     "tar_train_filename": "en.train",
     "src_val_filename": "ko.val",
@@ -12,13 +12,15 @@
 
   "basic_parameter": {
     "model": "transformer",
-    "region": "en",
-    "vocab_size": 8000,
+    "src_region": "ko",
+    "trc_region": "en",
+    "encoder_vocab_size": 8000,
+    "decoder_vocab_size": 8000,
     "max_sequence_size": 50,
     "label_smoothing": 0.1,
     "learning_rate": 0.0005,
     "epochs": 200,
-    "batch_size": 512,
+    "batch_size": 128,
     "early_stopping": 30,
     "train_step_print": 10,
     "val_step_print": 100,

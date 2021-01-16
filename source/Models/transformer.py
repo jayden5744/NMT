@@ -4,6 +4,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 
 def get_sinusoid_encoding_table(pos, d_model):
     def cal_angle(position, i):
@@ -241,3 +243,25 @@ class Transformer(nn.Module, ABC):
         enc_outputs, _ = self.encoder(enc_inputs)
         dec_outputs, dec_enc_attns = self.decoder(dec_inputs, enc_inputs, enc_outputs)
         return dec_outputs, dec_enc_attns
+
+
+def greedy_decoder(model, enc_input, seq_len=50, start_symbol=0):
+    """
+    :param model: Transformer Model
+    :param enc_input: The encoder input
+    :param start_symbol: The start symbol. In this example it is 'S' which corresponds to index 0
+    :return: The target input
+    """
+    batch_size = enc_input.size(0)
+    enc_outputs, enc_self_attns = model.module.encoder(enc_input)
+    dec_input = torch.LongTensor(batch_size, seq_len).fill_(4).to(device)
+    next_symbol = start_symbol
+    for i in range(0, seq_len):
+        dec_input[0][i] = next_symbol
+        dec_outputs, _ = model.module.decoder(dec_input, enc_input, enc_outputs)
+        prob = dec_outputs.squeeze(0).max(dim=-1, keepdim=False)[1]
+        next_word = prob.data[i]
+        next_symbol = next_word.item()
+        if next_word.item() == 1:
+            break
+    return dec_input
